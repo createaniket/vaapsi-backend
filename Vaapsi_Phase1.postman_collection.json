@@ -1,0 +1,673 @@
+{
+  "info": {
+    "name": "Vaapsi Platform — Phase 1 API",
+    "description": "Complete API collection for the Vaapsi backend (auth, DPP, products, marketplace, loyalty, cart/orders, support, admin).\n\nSetup:\n1. Set the `baseUrl` collection variable (default http://localhost:4000).\n2. Run **Auth > Login (customer)** — it auto-saves `accessToken` & `refreshToken`.\n3. Other requests use `{{accessToken}}` automatically.\n\nSeeded logins (password `Password@123`): admin@vaapsi.com, agent@vaapsi.com, customer@vaapsi.com.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000", "type": "string" },
+    { "key": "apiPrefix", "value": "/api/v1", "type": "string" },
+    { "key": "accessToken", "value": "", "type": "string" },
+    { "key": "refreshToken", "value": "", "type": "string" },
+    { "key": "productId", "value": "", "type": "string" },
+    { "key": "listingId", "value": "", "type": "string" },
+    { "key": "dppSerial", "value": "", "type": "string" },
+    { "key": "orderId", "value": "", "type": "string" },
+    { "key": "ticketId", "value": "", "type": "string" },
+    { "key": "userId", "value": "", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register (email + password)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', res.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', res.data.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"Password@123\",\n  \"fullName\": \"New User\",\n  \"marketingOptIn\": false\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/auth/register", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Login (customer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', res.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', res.data.refreshToken);",
+                  "  pm.collectionVariables.set('userId', res.data.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@vaapsi.com\",\n  \"password\": \"Password@123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/auth/login", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', res.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', res.data.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@vaapsi.com\",\n  \"password\": \"Password@123\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/auth/login", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "OTP request (phone)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"phone\": \"+919876543210\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/auth/otp/request", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["auth", "otp", "request"] },
+            "description": "In non-production the response includes `devCode` to use in OTP verify."
+          }
+        },
+        {
+          "name": "OTP verify (phone)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', res.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', res.data.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"phone\": \"+919876543210\",\n  \"code\": \"123456\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/auth/otp/verify", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["auth", "otp", "verify"] }
+          }
+        },
+        {
+          "name": "Refresh tokens",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', res.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', res.data.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/auth/refresh", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["auth", "refresh"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/auth/logout", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["auth", "logout"] }
+          }
+        },
+        {
+          "name": "Me (current user)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/auth/me", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get my profile",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/users/me", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["users", "me"] } }
+        },
+        {
+          "name": "Update my profile",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Updated Name\",\n  \"marketingOptIn\": true\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/users/me", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["users", "me"] }
+          }
+        },
+        {
+          "name": "Get notification preferences",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/users/me/notification-preferences", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["users", "me", "notification-preferences"] } }
+        },
+        {
+          "name": "Update notification preferences",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": true,\n  \"sms\": false,\n  \"whatsapp\": true,\n  \"push\": true,\n  \"marketing\": false\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/users/me/notification-preferences", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["users", "me", "notification-preferences"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "List products",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.length) { pm.collectionVariables.set('productId', res.data[0].id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/products?page=1&limit=20",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "category", "value": "Bags", "disabled": true },
+                { "key": "brand", "value": "Vaapsi Basics", "disabled": true },
+                { "key": "isPreLoved", "value": "false", "disabled": true },
+                { "key": "search", "value": "backpack", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get product by id",
+          "request": { "auth": { "type": "noauth" }, "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/products/{{productId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["products", "{{productId}}"] } }
+        },
+        {
+          "name": "Similar pre-loved (cross-listing)",
+          "request": { "auth": { "type": "noauth" }, "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/products/{{productId}}/similar-preloved", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["products", "{{productId}}", "similar-preloved"] }, "description": "For a brand-new product, returns similar pre-loved listings." }
+        },
+        {
+          "name": "Create product",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["const res = pm.response.json();", "if (res.data && res.data.id) { pm.collectionVariables.set('productId', res.data.id); }"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Pre-loved Denim Jacket\",\n  \"category\": \"Apparel\",\n  \"basePrice\": 899,\n  \"brand\": \"Vaapsi Basics\",\n  \"description\": \"Gently used denim jacket.\",\n  \"imageUrls\": [],\n  \"isPreLoved\": true,\n  \"condition\": \"GOOD\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/products", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["products"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DPP",
+      "item": [
+        {
+          "name": "Get passport by QR serial (public)",
+          "request": { "auth": { "type": "noauth" }, "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/dpp/serial/{{dppSerial}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["dpp", "serial", "{{dppSerial}}"] } }
+        },
+        {
+          "name": "Get DPP by product",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/dpp/product/{{productId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["dpp", "product", "{{productId}}"] } }
+        },
+        {
+          "name": "Create DPP",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["const res = pm.response.json();", "if (res.data && res.data.serialNumber) { pm.collectionVariables.set('dppSerial', res.data.serialNumber); }"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"material\": \"Recycled cotton\",\n  \"originCountry\": \"India\",\n  \"careInstructions\": \"Machine wash cold.\",\n  \"externalProvider\": \"external-dpp-provider\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/dpp", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["dpp"] }
+          }
+        },
+        {
+          "name": "Update DPP (manual passport data)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"careInstructions\": \"Hand wash only.\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/dpp/product/{{productId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["dpp", "product", "{{productId}}"] }
+          }
+        },
+        {
+          "name": "Mark end-of-life (staff)",
+          "request": { "method": "POST", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/dpp/product/{{productId}}/end-of-life", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["dpp", "product", "{{productId}}", "end-of-life"] }, "description": "Requires SUPPORT_AGENT or ADMIN token." }
+        }
+      ]
+    },
+    {
+      "name": "Marketplace (Listings)",
+      "item": [
+        {
+          "name": "List active listings",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["const res = pm.response.json();", "if (res.data && res.data.length) { pm.collectionVariables.set('listingId', res.data[0].id); }"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/listings?page=1&limit=20",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["listings"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "category", "value": "Bags", "disabled": true },
+                { "key": "status", "value": "ACTIVE", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get listing by id",
+          "request": { "auth": { "type": "noauth" }, "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/listings/{{listingId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["listings", "{{listingId}}"] } }
+        },
+        {
+          "name": "Create listing",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["const res = pm.response.json();", "if (res.data && res.data.id) { pm.collectionVariables.set('listingId', res.data.id); }"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"price\": 799,\n  \"delayDays\": 30\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/listings", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["listings"] }
+          }
+        },
+        {
+          "name": "Withdraw listing",
+          "request": { "method": "POST", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/listings/{{listingId}}/withdraw", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["listings", "{{listingId}}", "withdraw"] } }
+        },
+        {
+          "name": "Set shipping date",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"shippingDate\": \"2026-09-01T00:00:00.000Z\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/listings/{{listingId}}/shipping-date", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["listings", "{{listingId}}", "shipping-date"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Loyalty",
+      "item": [
+        {
+          "name": "Get wallet",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/loyalty/wallet", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["loyalty", "wallet"] } }
+        },
+        {
+          "name": "Redeem points (Vaapsi bucket)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"points\": 50,\n  \"bucket\": \"VAAPSI\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/loyalty/redeem", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["loyalty", "redeem"] },
+            "description": "Gated at 100 lifetime points. External bucket capped at 30%."
+          }
+        },
+        {
+          "name": "Redeem points (external partner)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"points\": 10,\n  \"bucket\": \"EXTERNAL_PARTNER\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/loyalty/redeem", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["loyalty", "redeem"] }
+          }
+        },
+        {
+          "name": "Donate points to Vaapsi wallet",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"points\": 10\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/loyalty/donate", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["loyalty", "donate"] }
+          }
+        },
+        {
+          "name": "Pooled balance",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/loyalty/pool/balance", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["loyalty", "pool", "balance"] } }
+        },
+        {
+          "name": "Request pool link",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"memberId\": \"{{userId}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/loyalty/pool/request", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["loyalty", "pool", "request"] }
+          }
+        },
+        {
+          "name": "Respond to pool link",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"linkId\": \"<pool-link-id>\",\n  \"approve\": true\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/loyalty/pool/respond", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["loyalty", "pool", "respond"] }
+          }
+        },
+        {
+          "name": "Earn — any-brand return (staff)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"points\": 25,\n  \"reason\": \"Any-brand textile return via school program\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/loyalty/earn/any-brand", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["loyalty", "earn", "any-brand"] },
+            "description": "Requires SUPPORT_AGENT or ADMIN token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart & Orders",
+      "item": [
+        {
+          "name": "Get cart",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/cart", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["cart"] } }
+        },
+        {
+          "name": "Add item to cart",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"listingId\": \"{{listingId}}\",\n  \"quantity\": 1,\n  \"isDelayed\": true\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/cart/items", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["cart", "items"] },
+            "description": "isDelayed=true → payment taken immediately, shipping deferred (30-day window)."
+          }
+        },
+        {
+          "name": "Remove item from cart",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/cart/items/{{listingId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["cart", "items", "{{listingId}}"] } }
+        },
+        {
+          "name": "Checkout (with redemption)",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["const res = pm.response.json();", "if (res.data && res.data.order) { pm.collectionVariables.set('orderId', res.data.order.id); }"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"redeemPoints\": 50,\n  \"redeemBucket\": \"VAAPSI\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/cart/checkout", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["cart", "checkout"] },
+            "description": "Captures payment immediately, marks listings SOLD, transfers DPP, earns points. Omit body for no redemption."
+          }
+        },
+        {
+          "name": "List my orders",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/cart/orders", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["cart", "orders"] } }
+        },
+        {
+          "name": "Get order by id",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/cart/orders/{{orderId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["cart", "orders", "{{orderId}}"] } }
+        }
+      ]
+    },
+    {
+      "name": "Support (Tickets)",
+      "item": [
+        {
+          "name": "Raise ticket (customer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["const res = pm.response.json();", "if (res.data && res.data.id) { pm.collectionVariables.set('ticketId', res.data.id); }"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"subject\": \"Order not shipped\",\n  \"body\": \"My delayed-purchase order hasn't shipped yet.\",\n  \"priority\": \"MEDIUM\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/support/tickets", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["support", "tickets"] }
+          }
+        },
+        {
+          "name": "My tickets (customer)",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/support/tickets/mine", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["support", "tickets", "mine"] } }
+        },
+        {
+          "name": "My ticket by id (customer)",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/support/tickets/mine/{{ticketId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["support", "tickets", "mine", "{{ticketId}}"] } }
+        },
+        {
+          "name": "Reply to ticket",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"body\": \"Thanks, checking on this now.\",\n  \"internal\": false\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/support/tickets/{{ticketId}}/reply", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["support", "tickets", "{{ticketId}}", "reply"] }
+          }
+        },
+        {
+          "name": "Queue (staff)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/support/tickets/queue?page=1&limit=20",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["support", "tickets", "queue"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "status", "value": "OPEN", "disabled": true }
+              ]
+            },
+            "description": "Requires SUPPORT_AGENT or ADMIN token."
+          }
+        },
+        {
+          "name": "Get full ticket (staff)",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/support/tickets/{{ticketId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["support", "tickets", "{{ticketId}}"] } }
+        },
+        {
+          "name": "Assign ticket (staff)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"agentId\": \"{{userId}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/support/tickets/{{ticketId}}/assign", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["support", "tickets", "{{ticketId}}", "assign"] }
+          }
+        },
+        {
+          "name": "Escalate ticket (staff)",
+          "request": { "method": "POST", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/support/tickets/{{ticketId}}/escalate", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["support", "tickets", "{{ticketId}}", "escalate"] } }
+        },
+        {
+          "name": "Set ticket status (staff)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"RESOLVED\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/support/tickets/{{ticketId}}/status", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["support", "tickets", "{{ticketId}}", "status"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Analytics dashboard",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/admin/analytics", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["admin", "analytics"] }, "description": "ADMIN token required (login as admin@vaapsi.com first)." }
+        },
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/admin/users?page=1&limit=20",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["admin", "users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "role", "value": "CUSTOMER", "disabled": true },
+                { "key": "status", "value": "ACTIVE", "disabled": true },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Set user status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"SUSPENDED\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/admin/users/{{userId}}/status", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["admin", "users", "{{userId}}", "status"] }
+          }
+        },
+        {
+          "name": "Set user role",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"role\": \"SUPPORT_AGENT\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/admin/users/{{userId}}/role", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["admin", "users", "{{userId}}", "role"] }
+          }
+        },
+        {
+          "name": "Moderate listing",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"action\": \"WITHDRAWN\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/admin/listings/{{listingId}}/moderate", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["admin", "listings", "{{listingId}}", "moderate"] }
+          }
+        },
+        {
+          "name": "DPP audit trail",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}{{apiPrefix}}/admin/dpp/{{productId}}/audit", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["admin", "dpp", "{{productId}}", "audit"] } }
+        },
+        {
+          "name": "Audit logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/admin/audit-logs?page=1&limit=20",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["admin", "audit-logs"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "entityType", "value": "User", "disabled": true }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

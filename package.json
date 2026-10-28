@@ -1,0 +1,36 @@
+{
+  "name": "vaapsi-backend",
+  "version": "1.0.0",
+  "description": "Vaapsi Platform — Phase 1 backend (JavaScript, Express + PostgreSQL)",
+  "main": "src/server.js",
+  "engines": { "node": ">=18.0.0" },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "migrate": "node src/db/migrate.js",
+    "seed": "node src/db/seed.js",
+    "setup": "npm run migrate && npm run seed",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "argon2": "^0.44.0",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "nanoid": "^3.3.11",
+    "pg": "^8.16.3",
+    "pino": "^10.0.0",
+    "pino-http": "^11.0.0",
+    "qrcode": "^1.5.4",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "supertest": "^7.1.4",
+    "vitest": "^3.2.4"
+  }
+}
